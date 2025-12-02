@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficas de Pastel - Trastornos de Personalidad</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding-top: clamp(70px, 10vw, 80px);
+        }
+
+        /* ------------------ MENÚ SUPERIOR ------------------ */
+        nav {
+            width: 100%;
+            background: #fcf75e;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: clamp(12px, 2vw, 15px) clamp(20px, 3vw, 30px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px #0000001a;
+            z-index: 1000;
+        }
+
+        nav .logo {
+            font-size: clamp(18px, 4vw, 22px);
+            font-weight: bold;
+            color: #d75efc;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: clamp(10px, 2vw, 25px);
+        }
+
+        nav ul li a {
+            font-size: clamp(16px, 3vw, 18px);
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        nav ul li a:hover {
+            color: #d75efc;
+        }
+        /* ---------------------------------------------------- */
+
+        .container {
+            max-width: min(95%, 1200px);
+            margin: 0 auto;
+            padding: 0 clamp(15px, 3vw, 20px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: clamp(30px, 4vw, 40px);
+            padding: clamp(15px, 3vw, 20px);
+            background: linear-gradient(135deg, #fcf75e 0%, #fcf75e 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 550px), 1fr));
+            gap: clamp(20px, 3vw, 30px);
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            padding: clamp(20px, 3vw, 25px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-title {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 600;
+            margin-bottom: clamp(15px, 2vw, 20px);
+            color: #f3aacb;
+            text-align: center;
+            padding-bottom: clamp(10px, 1.5vw, 15px);
+            border-bottom: 1px solid #eee;
+            line-height: 1.4;
+        }
+
+        .chart-content {
+            display: flex;
+            gap: clamp(15px, 2vw, 20px);
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .chart-wrapper {
+            flex: 1 1 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+            min-width: 250px;
+        }
+
+        .text-box {
+            flex: 1 1 300px;
+            background-color: #d75efc3f;
+            border-left: clamp(3px, 0.5vw, 4px) solid #f3aacb;
+            padding: clamp(12px, 2vw, 15px);
+            border-radius: 0 8px 8px 0;
+            font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+        }
+
+        .text-box h3 {
+            color: #ff3f9f;
+            margin-bottom: clamp(8px, 1vw, 10px);
+            font-size: clamp(1rem, 2vw, 1.1rem);
+        }
+
+        .text-box ul {
+            padding-left: clamp(15px, 2vw, 20px);
+            margin-top: clamp(8px, 1vw, 10px);
+        }
+
+        .text-box li {
+            margin-bottom: clamp(6px, 1vw, 8px);
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: clamp(30px, 4vw, 40px);
+            padding: clamp(15px, 3vw, 20px);
+            color: #7f8c8d;
+            font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN - MEDIA QUERIES
+           ============================================ */
+
+        /* PANTALLAS MEDIANAS (Tablet) */
+        @media (max-width: 992px) {
+            .chart-content {
+                flex-direction: column;
+            }
+            
+            .chart-wrapper, .text-box {
+                flex: 1 1 100%;
+                min-width: 100%;
+            }
+            
+            .text-box {
+                border-left: none;
+                border-top: clamp(3px, 0.5vw, 4px) solid #f3aacb;
+                border-radius: 0 0 8px 8px;
+            }
+            
+            .chart-wrapper {
+                min-height: 220px;
+            }
+        }
+
+        /* PANTALLAS PEQUEÑAS (Móvil grande) */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 15px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px 15px;
+            }
+            
+            nav ul li a {
+                font-size: 15px;
+            }
+            
+            .chart-title {
+                font-size: 1.1rem;
+            }
+            
+            .chart-wrapper {
+                min-height: 200px;
+            }
+        }
+
+        /* PANTALLAS MÓVILES (Teléfonos) */
+        @media (max-width: 576px) {
+            body {
+                padding-top: 90px;
+            }
+            
+            nav {
+                padding: 8px 12px;
+            }
+            
+            nav .logo {
+                font-size: 16px;
+            }
+            
+            nav ul {
+                gap: 8px 12px;
+            }
+            
+            nav ul li a {
+                font-size: 14px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .chart-card {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .chart-title {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            
+            .chart-wrapper {
+                min-height: 180px;
+            }
+            
+            .text-box {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+            
+            .text-box h3 {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* PANTALLAS MUY PEQUEÑAS (Teléfonos pequeños) */
+        @media (max-width: 400px) {
+            body {
+                padding-top: 85px;
+            }
+            
+            nav {
+                padding: 6px 10px;
+            }
+            
+            nav .logo {
+                font-size: 15px;
+            }
+            
+            nav ul {
+                gap: 6px 10px;
+            }
+            
+            nav ul li a {
+                font-size: 13px;
+                padding: 2px 5px;
+            }
+            
+            .chart-wrapper {
+                min-height: 160px;
+            }
+            
+            .chart-title {
+                font-size: 0.95rem;
+            }
+            
+            .text-box ul {
+                padding-left: 12px;
+            }
+            
+            .text-box li {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* PANTALLAS EXTRA GRANDES (Desktop grande) */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1300px;
+            }
+            
+            .charts-container {
+                gap: 35px;
+            }
+            
+            .chart-card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ------------------ MENÚ SUPERIOR ------------------ -->
+    <nav>
+        <div class="logo">TPE Info</div>
+        <ul>
+            <li><a href="karen.html">Menú Principal</a></li>
+        </ul>
+    </nav>
+    <!-- ---------------------------------------------------- -->
+
+    <div class="container">
+        <header>
+            <h1>Trastorno de Personalidad Esquizoide</h1>
+            <p class="subtitle">¿Qué tanto sabe la sociedad?</p>
+        </header>
+
+        <div class="charts-container">
+
+            <!-- Gráfica 1 -->
+            <div class="chart-card" id="graf1">
+                <h2 class="chart-title">La Característica central del Trastorno de Personalidad Esquizoide (TPE) es :</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart1"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>La inestabilidad emocional y las relaciones intensas</li>
+                            <li>Un patrón general de desapego de las relaciones sociales</li>
+                            <li>La necesidad de ser el centro de atención</li>
+                            <li>La desconfianza y suspicacia general hacia los demás</li>
+                            <li>Una gama restringida de expresión emocional</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 2 -->
+            <div class="chart-card" id="graf2">
+                <h2 class="chart-title">Según el DSM-5, los síntomas deben comenzar:</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart2"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>Exclusivamente en la edad adulta</li>
+                            <li>En la adolescencia o inicio de la adultez</li>
+                            <li>En la infancia</li>
+                            <li>Después de un evento traumático</li>
+                            <li>En la tercera edad</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 3 -->
+            <div class="chart-card" id="graf3">
+                <h2 class="chart-title">¿Cuál NO es un criterio diagnóstico?</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart3"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>Actividades solitarias</li>
+                            <li>Miedo a crítica o rechazo</li>
+                            <li>No deseo de relaciones cercanas</li>
+                            <li>Indiferencia al elogio</li>
+                            <li>Frialdad emocional</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 4 -->
+            <div class="chart-card" id="graf4">
+                <h2 class="chart-title">Una persona con TPE típicamente:</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart4"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>Desea amistades pero la ansiedad lo frena</li>
+                            <li>Está desinteresado en lazos cercanos</li>
+                            <li>Forma relaciones intensas</li>
+                            <li>Manipula para atención</li>
+                            <li>Anhela relaciones pero se siente indigno</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 5 -->
+            <div class="chart-card" id="graf5">
+                <h2 class="chart-title">Gama restringida de expresión emocional significa:</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart5"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>Emociones intensas no expresadas</li>
+                            <li>No experimentar ni expresar emociones</li>
+                            <li>Expresión dramática</li>
+                            <li>Arrebatos de ira</li>
+                            <li>Expresión plana</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 6 -->
+            <div class="chart-card" id="graf6">
+                <h2 class="chart-title">Diagnóstico diferencial debe hacerlo un profesional con:</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart6"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>T. Personalidad por evitación</li>
+                            <li>T. Límite</li>
+                            <li>T. Narcisista</li>
+                            <li>T. Antisocial</li>
+                            <li>T. Dependiente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica 7 -->
+            <div class="chart-card" id="graf7">
+                <h2 class="chart-title">Diferencia entre TPE y T. por evitación:</h2>
+                <div class="chart-content">
+                    <div class="chart-wrapper">
+                        <canvas id="chart7"></canvas>
+                    </div>
+                    <div class="text-box">
+                        <h3>La gente contestó:</h3>
+                        <ul>
+                            <li>En TPE sí hay deseo de relacionarse</li>
+                            <li>En TPE NO hay deseo, en evitación sí pero con miedo</li>
+                            <li>TPE implica comportamientos excéntricos</li>
+                            <li>TPE más común en mujeres</li>
+                            <li>Vida afectiva más pobre</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <p>Análisis de trastornos de personalidad - Información educativa</p>
+        </footer>
+    </div>
+
+    <!-- Scripts de gráficas (NO MODIFICO NADA) -->
+    <script>
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: function(context) {
+                                // Tamaño de fuente responsivo para las leyendas
+                                const width = window.innerWidth;
+                                if (width < 576) return 10;
+                                if (width < 768) return 11;
+                                if (width < 992) return 12;
+                                return 13;
+                            }
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    },
+                    bodyFont: {
+                        size: function(context) {
+                            const width = window.innerWidth;
+                            if (width < 576) return 11;
+                            if (width < 768) return 12;
+                            return 13;
+                        }
+                    }
+                }
+            }
+        };
+
+        const ctx1 = document.getElementById('chart1').getContext('2d');
+        new Chart(ctx1, {
+            type: 'pie',
+            data: {
+                labels: ['Inestabilidad emocional', 'Desapego social', 'Ser el centro', 'Desconfianza', 'Restricción emocional'],
+                datasets: [{
+                    data: [19, 52, 0, 16, 13],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx2 = document.getElementById('chart2').getContext('2d');
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: ['Edad adulta', 'Adolescencia', 'Infancia', 'Trauma', 'Tercera edad'],
+                datasets: [{
+                    data: [1, 48, 35, 13],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx3 = document.getElementById('chart3').getContext('2d');
+        new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: ['Actividades solitarias', 'Miedo a rechazo', 'No deseo de relaciones', 'Indiferencia', 'Frialdad emocional'],
+                datasets: [{
+                    data: [17, 43, 10, 30],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx4 = document.getElementById('chart4').getContext('2d');
+        new Chart(ctx4, {
+            type: 'pie',
+            data: {
+                labels: ['Deseo pero ansiedad', 'Desinterés', 'Relaciones intensas', 'Manipulación'],
+                datasets: [{
+                    data: [25, 35, 25, 15],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx5 = document.getElementById('chart5').getContext('2d');
+        new Chart(ctx5, {
+            type: 'pie',
+            data: {
+                labels: ['Intensas no expresadas', 'No experimentar', 'Dramático', 'Ira', 'Plana'],
+                datasets: [{
+                    data: [20, 50, 10, 20],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx6 = document.getElementById('chart6').getContext('2d');
+        new Chart(ctx6, {
+            type: 'pie',
+            data: {
+                labels: ['Evitación', 'Límite', 'Narcisista', 'Antisocial', 'Dependiente'],
+                datasets: [{
+                    data: [29, 13, 13, 35, 10],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+
+        const ctx7 = document.getElementById('chart7').getContext('2d');
+        new Chart(ctx7, {
+            type: 'pie',
+            data: {
+                labels: ['Deseo de relacionarse', 'No deseo pero sí en evitación', 'Excéntrico', 'Frecuencia sexo', 'Pobre vida afectiva'],
+                datasets: [{
+                    data: [17, 43, 10, 30],
+                    backgroundColor: ['#FFD1DC', '#FFB7C5', '#fcf75e', '#f3aacb', '#FEC5A9'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: commonOptions
+        });
+    </script>
+
+</body>
+</html>
